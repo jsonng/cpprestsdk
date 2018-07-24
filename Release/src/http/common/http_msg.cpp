@@ -1,19 +1,7 @@
 /***
-* ==++==
+* Copyright (C) Microsoft. All rights reserved.
+* Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 *
-* Copyright (c) Microsoft Corporation. All rights reserved.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* ==--==
 * =+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 *
 * HTTP Library: Request and reply message definitions.
@@ -23,6 +11,10 @@
 * =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ****/
 #include "stdafx.h"
+#include "../common/internal_http_helpers.h"
+
+#undef min
+#undef max
 
 using namespace web;
 using namespace utility;
@@ -220,7 +212,7 @@ utility::size64_t http_headers::content_length() const
 
 void http_headers::set_content_length(utility::size64_t length)
 {
-    m_headers[http::header_names::content_length] = utility::conversions::print_string(length, std::locale::classic());
+    m_headers[http::header_names::content_length] = utility::conversions::details::to_string_t(length);
 }
 
 namespace details {
@@ -260,6 +252,35 @@ void parse_headers_string(_Inout_z_ utf16char *headersStr, http_headers &headers
 }
 #endif
 
+}
+
+http_version __cdecl http_version::from_string(const std::string& http_version_string)
+{
+    std::stringstream str(http_version_string);
+    str.imbue(std::locale::classic());
+
+    std::string http; std::getline(str, http, '/');
+    unsigned int major = 0; str >> major;
+    char dot = '\0'; str >> dot;
+    unsigned int minor = 0; str >> minor;
+
+    // check no failure, fully consumed, and correct fixed text
+    if (!str.fail() && str.eof() && "HTTP" == http && '.' == dot)
+    {
+        return{ (uint8_t)major, (uint8_t)minor };
+    }
+    return{ 0, 0 };
+}
+
+std::string http_version::to_utf8string() const
+{
+    std::string ret;
+    ret.reserve(8);
+    ret.append("HTTP/");
+    ret.append(std::to_string(static_cast<unsigned int>(major)));
+    ret.append(".");
+    ret.append(std::to_string(static_cast<unsigned int>(minor)));
+    return ret;
 }
 
 static const utility::char_t * stream_was_set_explicitly = _XPLATSTR("A stream was set on the message and extraction is not possible");
@@ -1006,7 +1027,8 @@ details::_http_request::_http_request(http::method mtd)
   : m_method(std::move(mtd)),
     m_initiated_response(0),
     m_server_context(),
-    m_cancellationToken(pplx::cancellation_token::none())
+    m_cancellationToken(pplx::cancellation_token::none()),
+    m_http_version(http::http_version{0, 0})
 {
     if(m_method.empty())
     {
@@ -1017,9 +1039,14 @@ details::_http_request::_http_request(http::method mtd)
 details::_http_request::_http_request(std::unique_ptr<http::details::_http_server_context> server_context)
   : m_initiated_response(0),
     m_server_context(std::move(server_context)),
-    m_cancellationToken(pplx::cancellation_token::none())
+    m_cancellationToken(pplx::cancellation_token::none()),
+    m_http_version(http::http_version{0, 0})
 {
 }
+
+const http_version http_versions::HTTP_0_9 = { 0, 9 };
+const http_version http_versions::HTTP_1_0 = { 1, 0 };
+const http_version http_versions::HTTP_1_1 = { 1, 1 };
 
 #define _METHODS
 #define DAT(a,b) const method methods::a = b;
@@ -1054,3 +1081,4 @@ details::_http_request::_http_request(std::unique_ptr<http::details::_http_serve
 #undef DAT
 #endif
 }} // namespace web::http
+

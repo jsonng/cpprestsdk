@@ -1,19 +1,7 @@
 /***
-* ==++==
+* Copyright (C) Microsoft. All rights reserved.
+* Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 *
-* Copyright (c) Microsoft Corporation. All rights reserved.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* ==--==
 * =+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 *
 * Defines a test server to handle websocket messages.
@@ -30,8 +18,9 @@
 #include "test_websocket_server.h"
 
 #ifdef _WIN32
+#pragma warning(disable : 4503) // generated too late for disable to be effective inside push/pop
 #pragma warning( push )
-#pragma warning(disable : 4100 4127 4996 4512 4701 4267 4067 4503 4005)
+#pragma warning(disable : 4100 4127 4996 4512 4701 4267 4067 4005)
 #define _WEBSOCKETPP_CPP11_STL_
 #define _WEBSOCKETPP_CONSTEXPR_TOKEN_
 #if _MSC_VER < 1900
@@ -39,8 +28,17 @@
 #endif
 #endif /* _WIN32 */
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winfinite-recursion"
+#endif
+
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #ifdef _WIN32
 #pragma warning( pop )

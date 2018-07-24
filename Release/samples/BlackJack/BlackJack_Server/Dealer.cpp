@@ -1,19 +1,7 @@
 /***
-* ==++==
+* Copyright (C) Microsoft. All rights reserved.
+* Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 *
-* Copyright (c) Microsoft Corporation. All rights reserved. 
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-* 
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* ==--==
 * =+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 *
 * Dealer.cpp : Contains the main logic of the black jack dealer
@@ -59,12 +47,9 @@ BlackJackDealer::BlackJackDealer(utility::string_t url) : m_listener(url)
     m_listener.support(methods::PUT, std::bind(&BlackJackDealer::handle_put, this, std::placeholders::_1));
     m_listener.support(methods::POST, std::bind(&BlackJackDealer::handle_post, this, std::placeholders::_1));
     m_listener.support(methods::DEL, std::bind(&BlackJackDealer::handle_delete, this, std::placeholders::_1));
-    
-    utility::ostringstream_t nextIdString;
-    nextIdString << nextId;
 
     std::shared_ptr<DealerTable> tbl = std::make_shared<DealerTable>(nextId, 8, 6);
-    s_tables[nextIdString.str()] = tbl;
+    s_tables[conversions::to_string_t(std::to_string(nextId))] = tbl;
     nextId += 1;
 }
 

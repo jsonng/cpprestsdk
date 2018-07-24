@@ -1,19 +1,7 @@
 /***
-* ==++==
+* Copyright (C) Microsoft. All rights reserved.
+* Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 *
-* Copyright (c) Microsoft Corporation. All rights reserved.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* ==--==
 * =+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
 *
 * Contains utility functions for helping to verify server certificates in OS X/iOS.
@@ -32,6 +20,7 @@
 
 #if defined(ANDROID) || defined(__ANDROID__)
 #include <jni.h>
+#include "pplx/threadpool.h"
 #endif
 
 #if defined(__APPLE__)
@@ -442,11 +431,11 @@ bool verify_X509_cert_chain(const std::vector<std::string> &certChain, const std
     params.RequestedUsage.dwType = USAGE_MATCH_TYPE_OR;
     LPSTR usages [] =
     {
-        szOID_PKIX_KP_SERVER_AUTH,
+        (LPSTR)szOID_PKIX_KP_SERVER_AUTH,
 
         // For older servers and to match IE.
-        szOID_SERVER_GATED_CRYPTO,
-        szOID_SGC_NETSCAPE
+        (LPSTR)szOID_SERVER_GATED_CRYPTO,
+        (LPSTR)szOID_SGC_NETSCAPE
     };
     params.RequestedUsage.Usage.cUsageIdentifier = std::extent<decltype(usages)>::value;
     params.RequestedUsage.Usage.rgpszUsageIdentifier = usages;
